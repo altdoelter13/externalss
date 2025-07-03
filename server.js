@@ -11,6 +11,11 @@ app.get("/", (req, res) => {
   res.json({ command: lastCommand });
 });
 
+app.post("/clear", (req, res) => {
+  lastCommand = "NONE";
+  res.send("Comando limpo");
+});
+
 app.post("/send", (req, res) => {
   const { command } = req.body;
   if (typeof command === "string") {
