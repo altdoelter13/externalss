@@ -15,10 +15,6 @@ app.get('/', (req, res) => {
 app.post('/send', (req, res) => {
     const { command } = req.body;
 
-    if (typeof command !== 'string' || command.trim() === "") {
-        return res.status(400).json({ error: 'Invalid command' });
-    }
-
     lastCommand = command;
     console.log("Novo comando recebido:", command);
     res.json({ status: 'success', received: command });
