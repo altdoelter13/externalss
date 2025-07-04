@@ -1,33 +1,29 @@
-const express = require("express");
-const cors = require("cors");
-
+const express = require('express');
+const cors = require('cors');
 const app = express();
+const PORT = process.env.PORT || 3000;
+
 app.use(cors());
 app.use(express.json());
 
-let lastCommand = "NONE";
+let lastCommand = "";
 
-app.get("/", (req, res) => {
-  res.json({ command: lastCommand });
+app.get('/', (req, res) => {
+    res.json({ command: lastCommand });
 });
 
-app.post("/clear", (req, res) => {
-  lastCommand = "NONE";
-  res.send("Comando limpo");
-});
+app.post('/send', (req, res) => {
+    const { command } = req.body;
 
-app.post("/send", (req, res) => {
-  const { command } = req.body;
-  if (typeof command === "string") {
+    if (typeof command !== 'string' || command.trim() === "") {
+        return res.status(400).json({ error: 'Invalid command' });
+    }
+
     lastCommand = command;
-    console.log("Comando recebido:", command);
-    res.send("OK");
-  } else {
-    res.status(400).send("Comando inválido");
-  }
+    console.log("Novo comando recebido:", command);
+    res.json({ status: 'success', received: command });
 });
 
-const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Servidor rodando na porta ${PORT}`);
+    console.log(`🟢 External SS Executor backend rodando na porta ${PORT}`);
 });
