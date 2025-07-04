@@ -9,7 +9,8 @@ app.use(express.json());
 let lastCommand = "";
 let lastLogo = "";
 app.get('/', (req, res) => {
-    res.json({ command: lastCommand, logo: lastLogo });
+    res.json({ command: lastCommand });
+    res.json({logo: lastLogo})
 });
 
 app.post('/send', (req, res) => {
