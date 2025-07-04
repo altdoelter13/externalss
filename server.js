@@ -7,13 +7,14 @@ app.use(cors());
 app.use(express.json());
 
 let lastCommand = "";
+let lastLogo = "";
 app.get('/', (req, res) => {
-    res.json({ command: lastCommand });
+    res.json({ command: lastCommand, logo: lastLogo });
 });
 
 app.post('/send', (req, res) => {
     const { command, logo } = req.body;
-    const logo = "true";
+    lastLogo = logo || "";
     lastCommand = command;
     res.json({ status: 'success', received: command, logo: logo });
 });
