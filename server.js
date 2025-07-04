@@ -7,17 +7,15 @@ app.use(cors());
 app.use(express.json());
 
 let lastCommand = "";
-
 app.get('/', (req, res) => {
     res.json({ command: lastCommand });
 });
 
 app.post('/send', (req, res) => {
-    const { command } = req.body;
-
+    const { command, logo } = req.body;
+    const logo = "true";
     lastCommand = command;
-    console.log("Novo comando recebido:", command);
-    res.json({ status: 'success', received: command });
+    res.json({ status: 'success', received: command, logo: logo });
 });
 
 app.listen(PORT, () => {
