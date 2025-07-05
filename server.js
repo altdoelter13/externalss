@@ -14,10 +14,7 @@ app.get('/', (req, res) => {
 
 app.post('/send', (req, res) => {
     const { command } = req.body;
-    if (command) {
-        lastCommand = command;
-    }
-    res.send("foi");
+    lastCommand = command;
 });
 
 app.listen(PORT, () => {
