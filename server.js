@@ -7,19 +7,16 @@ app.use(cors());
 app.use(express.json());
 
 let lastCommand = "";
-let lastLogo = "";
 app.get('/', (req, res) => {
     res.json({ command: lastCommand });
-    res.json({logo: lastLogo})
 });
 
 app.post('/send', (req, res) => {
-    const { command, logo } = req.body;
-    lastLogo = logo || "";
+    const { command } = req.body;
     lastCommand = command;
     res.json({ status: 'success', received: command, logo: logo });
 });
 
 app.listen(PORT, () => {
-    console.log(`🟢 External SS Executor backend rodando na porta ${PORT}`);
+    console.log(`rodando, porta: ${PORT}`);
 });
