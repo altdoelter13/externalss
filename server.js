@@ -4,19 +4,22 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
+app.use(express.urlencoded({ extended: true })); // Para receber `x-www-form-urlencoded`
 
 let lastCommand = "";
+
 app.get('/', (req, res) => {
-    res.json({ command: lastCommand });
+    res.send(lastCommand);
 });
 
 app.post('/send', (req, res) => {
     const { command } = req.body;
-    lastCommand = command;
-    res.json({ status: 'success', received: command, logo: logo });
+    if (command) {
+        lastCommand = command;
+    }
+    res.send("foi");
 });
 
 app.listen(PORT, () => {
-    console.log(`rodando, porta: ${PORT}`);
+    console.log(`rodando na porta: ${PORT}`);
 });
