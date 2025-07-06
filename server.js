@@ -9,7 +9,7 @@ app.use(express.urlencoded({ extended: true })); // Para receber `x-www-form-url
 let lastCommand = "";
 
 app.get('/', (req, res) => {
-    res.json({ lastCommand });
+    req.json({ lastCommand });
 });
 
 app.post('/send', (req, res) => {
