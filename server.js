@@ -10,7 +10,7 @@ let lastCommand = "";
 let isChecked = false; // Estado do checkbox
 
 app.get('/', (req, res) => {
-    res.json({ command, isChecked });
+    res.json({ lastCommand, isChecked });
 });
 
 app.post('/send', (req, res) => {
