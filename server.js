@@ -6,17 +6,17 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-let lastCommand = "";
+let command = "";
 let isChecked = false; // Estado do checkbox
 
 app.get('/', (req, res) => {
-    res.json({ lastCommand, isChecked });
+    res.json({ command, isChecked });
 });
 
 app.post('/send', (req, res) => {
     const { command, checkbox } = req.body;
 
-    if (command) lastCommand = command;
+    if (command) command = command;
 
     // Conversão automática do valor do checkbox
     if (typeof checkbox !== 'undefined') {
@@ -28,7 +28,7 @@ app.post('/send', (req, res) => {
 
     res.json({
         status: 'recebido',
-        command: lastCommand,
+        command: command,
         isChecked
     });
 });
