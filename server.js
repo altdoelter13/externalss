@@ -6,7 +6,7 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-let command = "";
+let lastCommand = "";
 let isChecked = false; // Estado do checkbox
 
 app.get('/', (req, res) => {
@@ -16,7 +16,7 @@ app.get('/', (req, res) => {
 app.post('/send', (req, res) => {
     const { command, checkbox } = req.body;
 
-    if (command) command = command;
+    if (command) lastCommand = command;
 
     // Conversão automática do valor do checkbox
     if (typeof checkbox !== 'undefined') {
@@ -28,7 +28,7 @@ app.post('/send', (req, res) => {
 
     res.json({
         status: 'recebido',
-        command: command,
+        command: lastCommand,
         isChecked
     });
 });
