@@ -16,15 +16,8 @@ app.get('/', (req, res) => {
 app.post('/send', (req, res) => {
     const { command, checkbox } = req.body;
 
-    if (command) lastCommand = command;
-
-    // Conversão automática do valor do checkbox
-    if (typeof checkbox !== 'undefined') {
-        const normalized = checkbox.toString().toLowerCase();
-        isChecked = normalized === "true";
-    } else {
-        isChecked = false; // caso o checkbox não esteja presente
-    }
+    lastCommand = command;
+    isChecked = "false"; // caso o checkbox não esteja presente
 
     res.json({
         status: 'recebido',
