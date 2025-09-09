@@ -7,7 +7,7 @@ app.use(cors());
 app.use(express.json());
 
 let lastCommand = "";
-let isChecked = false; // Estado do checkbox
+let isChecked = false; // Estado do checkbox (booleano)
 
 app.get('/', (req, res) => {
     res.json({ lastCommand, isChecked });
@@ -16,8 +16,8 @@ app.get('/', (req, res) => {
 app.post('/send', (req, res) => {
     const { command, checkbox } = req.body;
 
-    lastCommand = command;
-    isChecked = "false"; // caso o checkbox não esteja presente
+    lastCommand = command || "";
+    isChecked = checkbox === true; // só será true se o cliente mandar { "checkbox": true }
 
     res.json({
         status: 'recebido',
