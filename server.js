@@ -1,72 +1,29 @@
 const express = require("express");
-const path = require("path");
 const fs = require("fs");
+const path = require("path");
+const https = require("https");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-app.get("/asset", (req, res) => {
-  const id = req.query.id;
-  if (!id) return res.status(400).send("Missing ?id parameter.");
-  if (id === "1") {
-    const filePath = path.join(__dirname, "thenormal.rbxl");
-    if (fs.existsSync(filePath)) {
-      res.setHeader("Content-Type", "application/octet-stream");
-      return fs.createReadStream(filePath).pipe(res);
-    } else {
-      return res.status(404).send("thenormal.rbxl not found");
-    }
-  }
-  const url = `https://assetdelivery.roblox.com/v1/asset/?id=${id}`;
-  console.log(`[AssetDelivery] Proxying asset ID: ${id}`);
-  https.get(url, (assetRes) => {
-    if (assetRes.statusCode === 200) {
-      res.setHeader("Content-Type", "application/octet-stream");
-      assetRes.pipe(res);
-    } else {
-      res.status(assetRes.statusCode).send("Asset not found on Roblox.");
-    }
-  }).on("error", (err) => {
-    console.error("Erro ao buscar asset:", err);
-    res.status(500).send("Failed to fetch asset.");
-  });
-});
+// === Mapeamento PlaceId → .rbxl local ===
+const placeMap = {
+  "1": "thenormal.rbxl",
+  // Adicione outros places aqui
+};
 
-app.get("/asset/", (req, res) => {
-  const id = req.query.id;
-  if (!id) return res.status(400).send("Missing ?id parameter.");
-  if (id === "1") {
-    const filePath = path.join(__dirname, "thenormal.rbxl");
-    if (fs.existsSync(filePath)) {
-      res.setHeader("Content-Type", "application/octet-stream");
-      return fs.createReadStream(filePath).pipe(res);
-    } else {
-      return res.status(404).send("thenormal.rbxl not found");
-    }
-  }
-  const url = `https://assetdelivery.roblox.com/v1/asset/?id=${id}`;
-  console.log(`[AssetDelivery] Proxying asset ID: ${id}`);
-  https.get(url, (assetRes) => {
-    if (assetRes.statusCode === 200) {
-      res.setHeader("Content-Type", "application/octet-stream");
-      assetRes.pipe(res);
-    } else {
-      res.status(assetRes.statusCode).send("Asset not found on Roblox.");
-    }
-  }).on("error", (err) => {
-    console.error("Erro ao buscar asset:", err);
-    res.status(500).send("Failed to fetch asset.");
-  });
-});
+// === Função para pegar o .rbxl correto ===
+function getRbxlFile(placeId) {
+  const filename = placeMap[placeId];
+  if (!filename) return null;
+  const filePath = path.join(__dirname, filename);
+  return fs.existsSync(filePath) ? filePath : null;
+}
 
-// === Página inicial (lista de jogos) ===
-app.get("/games/list", (req, res) => {
-  res.sendFile(path.join(__dirname, "index.html"));
-});
-
-// === Página do jogo ===
-app.get("/games/:id/:slug", (req, res) => {
-  res.sendFile(path.join(__dirname, "game.html"));
+// === /games/start?placeid=X ===
+app.get("/games/start", (req, res) => {
+  const placeid = req.query.placeid || "1";
+  res.redirect(`/Game/PlaceLauncher.ashx?placeid=${placeid}`);
 });
 
 // === /Game/PlaceLauncher.ashx ===
@@ -78,16 +35,16 @@ app.get("/Game/PlaceLauncher.ashx", (req, res) => {
 
   const responseText = `--rbxsig%FAKESIG
 {"jobId":"${placeid}","status":2,"joinScriptUrl":"${joinScriptUrl}","authenticationUrl":"${negotiateUrl}","message":"","ticket":""}`;
-
+  
   res.setHeader("Content-Type", "text/plain");
   res.send(responseText);
 });
 
-// === /Game/join.ashx ===
+// === /Game/join.ashx?placeid=X ===
 app.get("/Game/join.ashx", (req, res) => {
   const placeid = req.query.placeid || "1";
-  const sig = "--rbxsig%Bmtk0ZBtDZIR/kucTSJIKodsN8T59t6sIwUfK2TVImeNNX5nPE16O4oGmFVJOv40dUfAsd6GQdW4QUW9VCKHupwcXJRnzg8s+jUCdRhozOjTqriEp3lluZqX60YNLMdxKKgZeAYcd7qiFxSVPnhS/Htx3T9fy9B3Hg5FvFGluCc=%";
-  
+  const sig = "--rbxsig%FAKESIG";
+
   const json = {
     ClientPort: 0,
     MachineAddress: "localhost",
@@ -101,7 +58,7 @@ app.get("/Game/join.ashx", (req, res) => {
     PlaceId: parseInt(placeid),
     MeasurementUrl: "",
     WaitingForCharacterGuid: "e01c22e4-a428-45f8-ae40-5058b4a1dafc",
-    BaseUrl: "https://externalss.onrender.com/",
+    BaseUrl: "https://externalss.onrender.com/asset?id=" + placeid, // BaseUrl aponta pro asset local
     ChatStyle: "Classic",
     VendorId: 0,
     ScreenShotInfo: "",
@@ -111,7 +68,7 @@ app.get("/Game/join.ashx", (req, res) => {
     MembershipType: "None",
     AccountAge: 0,
     CookieStoreEnabled: true,
-    IsRobloxPlace: false,
+    IsRobloxPlace: true,
     GenerateTeleportJoin: false,
     IsUnknownOrUnder13: true
   };
@@ -127,7 +84,32 @@ app.get("/Login/Negotiate.ashx", (req, res) => {
   res.send("true");
 });
 
-// === Iniciar servidor ===
-app.listen(PORT, () => {
-  console.log(`Servidor Roblox Revival ativo em http://localhost:${PORT}`);
+// === /asset?id=X ===
+app.get("/asset", (req, res) => {
+  const id = req.query.id;
+  if (!id) return res.status(400).send("Missing ?id parameter.");
+
+  // Se existir localmente
+  const localFile = getRbxlFile(id);
+  if (localFile) {
+    res.setHeader("Content-Type", "application/octet-stream");
+    return fs.createReadStream(localFile).pipe(res);
+  }
+
+  // Caso contrário, proxy para AssetDelivery oficial
+  const url = `https://assetdelivery.roblox.com/v1/asset/?id=${id}`;
+  https.get(url, (assetRes) => {
+    if (assetRes.statusCode === 200) {
+      res.setHeader("Content-Type", "application/octet-stream");
+      assetRes.pipe(res);
+    } else {
+      res.status(assetRes.statusCode).send("Asset not found on Roblox.");
+    }
+  }).on("error", (err) => {
+    console.error("Erro ao buscar asset:", err);
+    res.status(500).send("Failed to fetch asset.");
+  });
 });
+
+// === Iniciar servidor ===
+app.listen(PORT, () => console.log(`Servidor Roblox Revival ativo em http://localhost:${PORT}`));
