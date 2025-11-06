@@ -5,10 +5,20 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-function fetchRobloxAsset(id, res) {
+app.get("/asset", (req, res) => {
+  const id = req.query.id;
+  if (!id) return res.status(400).send("Missing ?id parameter.");
+  if (id === "1") {
+    const filePath = path.join(__dirname, "thenormal.rbxl");
+    if (fs.existsSync(filePath)) {
+      res.setHeader("Content-Type", "application/octet-stream");
+      return fs.createReadStream(filePath).pipe(res);
+    } else {
+      return res.status(404).send("thenormal.rbxl not found");
+    }
+  }
   const url = `https://assetdelivery.roblox.com/v1/asset/?id=${id}`;
   console.log(`[AssetDelivery] Proxying asset ID: ${id}`);
-
   https.get(url, (assetRes) => {
     if (assetRes.statusCode === 200) {
       res.setHeader("Content-Type", "application/octet-stream");
@@ -20,18 +30,33 @@ function fetchRobloxAsset(id, res) {
     console.error("Erro ao buscar asset:", err);
     res.status(500).send("Failed to fetch asset.");
   });
-}
-
-app.get("/asset", (req, res) => {
-  const id = req.query.id;
-  if (!id) return res.status(400).send("Missing ?id parameter.");
-  fetchRobloxAsset(id, res);
 });
 
 app.get("/asset/", (req, res) => {
   const id = req.query.id;
   if (!id) return res.status(400).send("Missing ?id parameter.");
-  fetchRobloxAsset(id, res);
+  if (id === "1") {
+    const filePath = path.join(__dirname, "thenormal.rbxl");
+    if (fs.existsSync(filePath)) {
+      res.setHeader("Content-Type", "application/octet-stream");
+      return fs.createReadStream(filePath).pipe(res);
+    } else {
+      return res.status(404).send("thenormal.rbxl not found");
+    }
+  }
+  const url = `https://assetdelivery.roblox.com/v1/asset/?id=${id}`;
+  console.log(`[AssetDelivery] Proxying asset ID: ${id}`);
+  https.get(url, (assetRes) => {
+    if (assetRes.statusCode === 200) {
+      res.setHeader("Content-Type", "application/octet-stream");
+      assetRes.pipe(res);
+    } else {
+      res.status(assetRes.statusCode).send("Asset not found on Roblox.");
+    }
+  }).on("error", (err) => {
+    console.error("Erro ao buscar asset:", err);
+    res.status(500).send("Failed to fetch asset.");
+  });
 });
 
 // === Página inicial (lista de jogos) ===
@@ -100,20 +125,6 @@ app.get("/Game/join.ashx", (req, res) => {
 app.get("/Login/Negotiate.ashx", (req, res) => {
   res.setHeader("Content-Type", "text/plain");
   res.send("true");
-});
-
-// === /asset?id=1 ===
-app.get("/asset", (req, res) => {
-  const id = req.query.id;
-  if (id === "1") {
-    const filePath = path.join(__dirname, "thenormal.rbxl");
-    if (fs.existsSync(filePath)) {
-      res.setHeader("Content-Type", "application/octet-stream");
-      return fs.createReadStream(filePath).pipe(res);
-    }
-    return res.status(404).send("thenormal.rbxl not found");
-  }
-  res.status(404).send("Asset not found");
 });
 
 // === Iniciar servidor ===
