@@ -5,6 +5,35 @@ const fs = require("fs");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
+function fetchRobloxAsset(id, res) {
+  const url = `https://assetdelivery.roblox.com/v1/asset/?id=${id}`;
+  console.log(`[AssetDelivery] Proxying asset ID: ${id}`);
+
+  https.get(url, (assetRes) => {
+    if (assetRes.statusCode === 200) {
+      res.setHeader("Content-Type", "application/octet-stream");
+      assetRes.pipe(res);
+    } else {
+      res.status(assetRes.statusCode).send("Asset not found on Roblox.");
+    }
+  }).on("error", (err) => {
+    console.error("Erro ao buscar asset:", err);
+    res.status(500).send("Failed to fetch asset.");
+  });
+}
+
+app.get("/asset", (req, res) => {
+  const id = req.query.id;
+  if (!id) return res.status(400).send("Missing ?id parameter.");
+  fetchRobloxAsset(id, res);
+});
+
+app.get("/asset/", (req, res) => {
+  const id = req.query.id;
+  if (!id) return res.status(400).send("Missing ?id parameter.");
+  fetchRobloxAsset(id, res);
+});
+
 // === Página inicial (lista de jogos) ===
 app.get("/games/list", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
