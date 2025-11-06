@@ -9,8 +9,14 @@ const PORT = process.env.PORT || 3000;
 // === Mapeamento PlaceId → .rbxl local ===
 const placeMap = {
   "1": "thenormal.rbxl",
-  // Adicione outros places aqui
 };
+app.get("/games/:id/:slug", (req, res) => {
+  res.sendFile(path.join(__dirname, "game.html"));
+});
+
+app.get("/games/list", (req, res) => {
+  res.sendFile(path.join(__dirname, "index.html"));
+});
 
 // === Função para pegar o .rbxl correto ===
 function getRbxlFile(placeId) {
