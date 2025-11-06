@@ -6,7 +6,7 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // === Página inicial (lista de jogos) ===
-app.get("/", (req, res) => {
+app.get("/games/list", (req, res) => {
   res.sendFile(path.join(__dirname, "index.html"));
 });
 
