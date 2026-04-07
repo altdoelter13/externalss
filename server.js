@@ -7,7 +7,7 @@ app.use(bodyParser.text({ type: '*/*' }));
 app.all('/', (req, res) => {
     if (req.method === 'POST') {
         storedCode = req.body;
-        return res.send("Sucesso!");
+        return res.send("sended!");
     }
     res.send(storedCode);
 });
