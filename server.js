@@ -12,6 +12,4 @@ app.all('/', (req, res) => {
     res.send(storedCode);
 });
 
-app.listen(port, () => {
-    console.log(`Servidor rodando em http://localhost:${port}/ss`);
-});
+app.listen(port, () => {});
